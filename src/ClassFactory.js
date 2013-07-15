@@ -32,23 +32,6 @@
   }
   
   /**
-   * Returns true if the given object has one or more own properties.
-   *
-   * @param {object} object
-   *
-   * @return {Boolean}
-   */
-  function hasProperties(object){
-    var key;
-    for(key in object){
-      if(hasOwn.call(object, key)){
-        return true;
-      }
-    }
-    return false;
-  }
-  
-  /**
    * Constructs a ClassFactory.
    * 
    * ClassFactory wraps a constructor. It has methods that can change the constructor
@@ -97,17 +80,8 @@
      * @chainable
      */
     members: function(members){
-      
-      if(hasProperties(this._class.prototype)){
-        extend(this._class.prototype, members);
-      }
-      
-      else{
-        this._class.prototype = members;
-      }
-      
+      extend(this._class.prototype, members);
       return this;
-      
     },
     
     /**
@@ -118,10 +92,8 @@
      * @chainable
      */
     statics: function(members){
-      
       extend(this._class, members);
       return this;
-      
     },
     
     /**

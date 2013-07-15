@@ -61,6 +61,11 @@ test("Members", function(assert){
   
   assert.equal(MyClass.prototype.foo, 'bar', "Members reside in the prototype of the finalized class.");
   
+  MyClass = (new ClassFactory(MyClass)).members({nyerk: 'snarl'}).finalize();
+  
+  assert.equal(MyClass.prototype.nyerk, 'snarl', "Additional members can be added at a later point.");
+  assert.equal(MyClass.prototype.foo, 'bar', "Old members are kept when additional members are added.");
+  
   MyClass = (new ClassFactory(MyClass)).construct(function(){}).finalize();
   
   assert.equal(MyClass.prototype.foo, 'bar', "Members are transferred onto a new constructor when given.");
@@ -68,7 +73,6 @@ test("Members", function(assert){
   var myInstance = new MyClass;
   
   assert.equal(myInstance.foo, 'bar', "Members are present in instances of the class.");
-  
   ok( ! myInstance.hasOwnProperty('foo') , "Members are not directly present in instances.");
   
   var MyParentClass = (new Class).members({nyerk: 'snarl'}).finalize();
@@ -95,5 +99,45 @@ test("Static members", function(assert){
   MyClass = (new ClassFactory(MyClass)).construct(function(){}).finalize();
   
   assert.equal(MyClass.foo, 'bar', "Statics are transferred onto a new constructor when given.");
+  
+});
+
+test("Practical implementation.", function(assert){
+  
+  var Animal = (new Class)
+  
+  .construct(function(gender){
+    this.gender = gender;
+  })
+  
+  .statics({
+    MALE: 1,
+    FEMALE: 2
+  })
+  
+  .members({
+    gender: null
+  })
+  
+  .finalize();
+  
+  var Dog = (new Class).extend(Animal)
+  
+  .construct(function(){
+    Animal.apply(this, arguments);
+  })
+  
+  .members({
+    bark: function(){alert('Woof!')}
+  })
+  
+  .finalize();
+  
+  var myDog = new Dog(Animal.MALE);
+  
+  //TESTS:
+  ok(myDog instanceof Dog, "myDog Is an instance of Dog.");
+  ok(myDog instanceof Animal, "myDog Is an instance of Animal.");
+  ok(myDog.gender, "myDog Has a gender.");
   
 });

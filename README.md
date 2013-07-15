@@ -1,4 +1,4 @@
-# JSLite - Version 0.1.0 Beta
+# JSLite - Version 0.1.1 Beta
 
 ## Introduction
 
