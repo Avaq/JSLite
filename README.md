@@ -1,4 +1,4 @@
-# JSLite - Version 0.1.1 Beta
+# JSLite - Version 0.2.0 Beta
 
 ## Introduction
 
@@ -15,17 +15,17 @@ tools are simple, pure JavaScript objects without bells and whistles. No magic
 `init`-method, no wrapped constructors, no glitchy `super()` method. Just JavaScript,
 slightly more readable and manageable.
 
-Here's an example of how creating classes looks like (Animal is an empty class used for
-demonstrative purpose):
+Here's an example of what creating classes looks like:
 
 ```js
-//Create the Dog class. It extends the Animal class.
-var Dog = (new JSLite.Class).extends(Animal)
+//Create the Dog class. It extends an imaginary Animal class.
+var Dog = (new JSLite.Class).extend(Animal)
 
 //Create a constructor.
 .construct(function(name){
   Dog.dogs.push(this);
   this.name = name;
+  Animal.call(this);
 })
 
 //Add static members.

@@ -22,7 +22,7 @@ test("Class factory", function(assert){
   
 });
 
-test("Class inheritance", function(){
+test("Class inheritance", function(assert){
   
   var MyClass = (new Class).finalize();
   var myInstance = new MyClass;
@@ -35,6 +35,12 @@ test("Class inheritance", function(){
   
   ok(myInstance instanceof MyClass, "An extended class instance is an instance of the parent class.");
   ok(myInstance instanceof MySubClass, "An extended class instance is an instance of its own class.");
+  
+  var MyConstructorClass = (new Class).construct(function(){this.foo = "bar";}).finalize();
+  var MySubConstructorClass = (new Class).extend(MyConstructorClass).finalize();
+  var myConstructorInstance = new MySubConstructorClass;
+  
+  assert.equal(myConstructorInstance.foo, "bar", "Sub-classes use their parent constructor by default.");
   
 });
 
@@ -123,10 +129,6 @@ test("Practical implementation.", function(assert){
   
   var Dog = (new Class).extend(Animal)
   
-  .construct(function(){
-    Animal.apply(this, arguments);
-  })
-  
   .members({
     bark: function(){alert('Woof!')}
   })
@@ -135,9 +137,10 @@ test("Practical implementation.", function(assert){
   
   var myDog = new Dog(Animal.MALE);
   
-  //TESTS:
+  
+  
   ok(myDog instanceof Dog, "myDog Is an instance of Dog.");
   ok(myDog instanceof Animal, "myDog Is an instance of Animal.");
-  ok(myDog.gender, "myDog Has a gender.");
+  assert.equal(myDog.gender, Animal.MALE, "It's a boy!");
   
 });

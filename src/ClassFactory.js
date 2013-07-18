@@ -40,7 +40,7 @@
    * @param {function} constructor The initial constructor.
    */
   function ClassFactory(constructor){
-    this._class = constructor;
+    this._class = this._noop = constructor;
   }
   
   //Define the members of the ClassFactory instances.
@@ -55,6 +55,7 @@
      */
     extend: function(parent){
       this._class.prototype = extend(Object.create(parent.prototype), this._class.prototype);
+      if(!this.hasConstructor()) this.construct(function(){parent.apply(this, arguments)});
       return this;
     },
     
@@ -103,6 +104,15 @@
      */
     finalize: function(){
       return this._class;
+    },
+    
+    /**
+     * Returns true if the constructor has changed since the factory was created.
+     *
+     * @return {boolean}
+     */
+    hasConstructor: function(){
+      return this._class !== this._noop;
     }
     
   };
