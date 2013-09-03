@@ -29,12 +29,14 @@ test("Class inheritance", function(assert){
   
   ok(myInstance instanceof Class, "A new class instance is an instance of Class.");
   ok(myInstance instanceof Object, "Any class is an instance of Object.");
+  assert.equal(myInstance._STATIC, MyClass, "The _STATIC property of an instance refers to its class.");
   
   var MySubClass = (new Class).extend(MyClass).finalize();
   var myInstance = new MySubClass;
   
   ok(myInstance instanceof MyClass, "An extended class instance is an instance of the parent class.");
   ok(myInstance instanceof MySubClass, "An extended class instance is an instance of its own class.");
+  assert.equal(myInstance._STATIC, MySubClass, "The _STATIC property of a sub-class instance refers to the sub-class.");
   
   var MyConstructorClass = (new Class).construct(function(){this.foo = "bar";}).finalize();
   var MySubConstructorClass = (new Class).extend(MyConstructorClass).finalize();
@@ -105,6 +107,21 @@ test("Static members", function(assert){
   MyClass = (new ClassFactory(MyClass)).construct(function(){}).finalize();
   
   assert.equal(MyClass.foo, 'bar', "Statics are transferred onto a new constructor when given.");
+  
+});
+
+test("Class standard methods", function(assert){
+  
+  var AClass = (new Class).finalize();
+  var a = new AClass;
+  
+  //Proxy.
+  ok(typeof a.proxy == 'function', "Class instances have the proxy method.");
+  var fn = function(a,b){return [this, a, b]};
+  var fna = a.proxy(fn, 'a');
+  assert.equal(fna()[0], a, "Proxied functions have the right context.");
+  assert.equal(fna()[1], 'a', "Proxied functions remember parameters.");
+  assert.equal(fna('b')[2], 'b', "Proxied functions accept new parameters.");
   
 });
 

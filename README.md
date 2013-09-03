@@ -1,4 +1,4 @@
-# JSLite - Version 0.2.0 Beta
+# JSLite - Version 0.3.0 Beta
 
 ## Introduction
 
@@ -58,6 +58,7 @@ myDog.bark();
 (myDog instanceof Class);
 (myDog instanceof Animal);
 (myDog instanceof Dog);
+(myDog._STATIC == Dog);
 (myDog == Dog.dogs[0]);
 (myDog.name == "Scoobie");
 

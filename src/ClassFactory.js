@@ -1,11 +1,16 @@
-;(function(global){
+/*jslint browser: true, forin: true, nomen: true, white: true */
+(function(global){
   
   "use strict";
   
   /**
-   * Alias for Object.prototype.hasOwnProperty.
+   * Create aliases for commonly used native code.
+   * 
+   * @function hasOwn Object.prototype.hasOwnProperty
+   * @function slice Array.prototype.slice
    */
-  var hasOwn = Object.prototype.hasOwnProperty;
+  var hasOwn = Object.prototype.hasOwnProperty
+    , slice = Array.prototype.slice;
   
   /**
    * Flat object extend.
@@ -18,11 +23,10 @@
    * @return {object} The target after the extensions are applied.
    */
   function extend(target){
-    var i, key, objects = Array.prototype.slice.call(arguments, 1);
+    var i, key, objects = slice.call(arguments, 1);
     for(i in objects){
       if(hasOwn.call(objects, i)){
-        for(key in objects[i]){
-          if(hasOwn.call(objects[i], key)){
+        for(key in objects[i]){if(hasOwn.call(objects[i], key)){
             target[key] = objects[i][key];
           }
         }
@@ -55,7 +59,9 @@
      */
     extend: function(parent){
       this._class.prototype = extend(Object.create(parent.prototype), this._class.prototype);
-      if(!this.hasConstructor()) this.construct(function(){parent.apply(this, arguments)});
+      if(!this.hasConstructor()){
+        this.construct(function(){parent.apply(this, arguments);});
+      }
       return this;
     },
     
@@ -69,7 +75,7 @@
     construct: function(constructor){
       constructor.prototype = this._class.prototype;
       extend(constructor, this._class);
-      this._class = constructor;
+      this._class = constructor.prototype._STATIC = constructor;
       return this;
     },
     
@@ -122,9 +128,37 @@
    */
   function Class(){
     var constructor = function(){};
-    constructor.prototype = Object.create(Class.prototype);
+    this._STATIC = constructor;
+    constructor.prototype = this;
     return new ClassFactory(constructor);
   }
+  
+  /**
+   * Defines some standard class behaviour functions.
+   * @type {Object}
+   */
+  Class.prototype = {
+    
+    /**
+     * Proxy a function to this class.
+     * 
+     * Returns a copy of the given function, which when called will always have this Class
+     * instance as its context.
+     *
+     * @param {function} func The function to bind to this.
+     *
+     * @return {function} The replacement function which is bound to this class.
+     */
+    proxy: function(func){
+      
+      var context = this
+        , args = slice.call(arguments, 1);
+      
+      return function(){return func.apply(context, args.concat(slice.call(arguments)));};
+      
+    }
+    
+  };
   
   //Export to JSLite.
   global.JSLite.ClassFactory = ClassFactory;
