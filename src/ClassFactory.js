@@ -36,6 +36,22 @@
   }
   
   /**
+   * Goes up the chain of inheritance to find the first class that has the static property of the given name.
+   *
+   * @param {String} name The name of the property to check for.
+   * @param {Class} context The class instance to start in.
+   *
+   * @return {Object|false} The result, or false if not found.
+   */
+  function findStaticWith(name, context){
+    var clazz = context._STATIC;
+    while(clazz && !hasOwn.call(clazz, name)){
+      clazz = clazz._PARENT;
+    }
+    return clazz;
+  }
+  
+  /**
    * Constructs a ClassFactory.
    * 
    * ClassFactory wraps a constructor. It has methods that can change the constructor
@@ -59,6 +75,7 @@
      */
     extend: function(parent){
       this._class.prototype = extend(Object.create(parent.prototype), this._class.prototype);
+      this._class._PARENT = parent;
       if(!this.hasConstructor()){
         this.construct(function(){parent.apply(this, arguments);});
       }
@@ -129,9 +146,13 @@
   function Class(){
     var constructor = function(){};
     this._STATIC = constructor;
+    constructor._PARENT = Class;
     constructor.prototype = this;
     return new ClassFactory(constructor);
   }
+  
+  //Class has no parent.
+  Class._PARENT = false;
   
   /**
    * Defines some standard class behaviour functions.
@@ -156,6 +177,48 @@
       
       return function(){return func.apply(context, args.concat(slice.call(arguments)));};
       
+    },
+    
+    /**
+     * Call a method on the parent class.
+     *
+     * @param {String} name The name of the method to call.
+     * @param {Array|Arguments} args An optional map of arguments to apply.
+     *
+     * @return {Object} Anything that was returned by the called method.
+     */
+    super: function(name, args){
+      return this._STATIC._PARENT.prototype[name].apply(this, args||[]);
+    },
+    
+    /**
+     * Get the value of a static property, somewhere along the chain of parent classes.
+     *
+     * @param {String} name The name of the property to look for.
+     *
+     * @return {Object} The value of the property or undefined.
+     */
+    getStatic: function(name){
+      var clazz = findStaticWith(name, this);
+      return clazz ? clazz[name] : undefined;
+    },
+    
+    /**
+     * Call and get the return value of a static method, somewhere along the chain of parent classes.
+     *
+     * @param {String} name The name of the method to look for.
+     * @param {Array|Arguments} args The arguments to pass to the method.
+     * 
+     * @throws {JSLite.JSLiteException} If The method is not found.
+     *
+     * @return {Object} The return value of the method.
+     */
+    callStatic: function(name, args){
+      var clazz = findStaticWith(name, this);
+      if(!clazz) throw new JSLite.JSLiteException(
+        "None of the parent classes of '"+typeof this+"' have method '"+name+"'."
+      );
+      return clazz[name].apply(clazz, args||[]);
     }
     
   };

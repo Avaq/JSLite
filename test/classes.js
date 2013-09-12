@@ -4,6 +4,7 @@
 
 var Class = JSLite.Class;
 var ClassFactory = JSLite.ClassFactory;
+var JSLiteException = JSLite.JSLiteException;
 
 test("Class factory", function(assert){
   
@@ -28,7 +29,7 @@ test("Class inheritance", function(assert){
   var myInstance = new MyClass;
   
   ok(myInstance instanceof Class, "A new class instance is an instance of Class.");
-  ok(myInstance instanceof Object, "Any class is an instance of Object.");
+  assert.equal(MyClass._PARENT, Class, "The _PARENT property of a class refers to Class.");
   assert.equal(myInstance._STATIC, MyClass, "The _STATIC property of an instance refers to its class.");
   
   var MySubClass = (new Class).extend(MyClass).finalize();
@@ -36,6 +37,7 @@ test("Class inheritance", function(assert){
   
   ok(myInstance instanceof MyClass, "An extended class instance is an instance of the parent class.");
   ok(myInstance instanceof MySubClass, "An extended class instance is an instance of its own class.");
+  assert.equal(MySubClass._PARENT, MyClass, "The _PARENT property of a sub-class refers to its parent class.");
   assert.equal(myInstance._STATIC, MySubClass, "The _STATIC property of a sub-class instance refers to the sub-class.");
   
   var MyConstructorClass = (new Class).construct(function(){this.foo = "bar";}).finalize();
@@ -112,7 +114,11 @@ test("Static members", function(assert){
 
 test("Class standard methods", function(assert){
   
-  var AClass = (new Class).finalize();
+  var AClass = (new Class)
+    .statics({foo:'bar', times:function(a){return a*2}})
+    .members({plus:function(a){return a+1}})
+    .finalize();
+  
   var a = new AClass;
   
   //Proxy.
@@ -122,6 +128,24 @@ test("Class standard methods", function(assert){
   assert.equal(fna()[0], a, "Proxied functions have the right context.");
   assert.equal(fna()[1], 'a', "Proxied functions remember parameters.");
   assert.equal(fna('b')[2], 'b', "Proxied functions accept new parameters.");
+  
+  //Super.
+  ok(typeof a.super == 'function', "Class instances have the super method.");
+  var BClass = (new Class).extend(AClass).statics({a:'b'}).members({plus:function(a){return a+2}}).finalize();
+  var b = new BClass;
+  assert.equal(b.plus(1), 3, "The method was overridden.");
+  assert.equal(b.super('plus', [1]), 2, "The super method allowed the parent to be called.");
+  
+  //CallStatic.
+  ok(typeof a.callStatic == 'function', "Class instances have the callStatic method.");
+  assert.equal(b.callStatic('times', [2]), 4, "CallStatic called a static function on the parent class.");
+  throws(function(){b.callStatic('nyerk')}, JSLiteException, "An exception is raised when method not found.");
+  
+  //GetStatic.
+  ok(typeof a.getStatic == 'function', "Class instances have the getStatic method.");
+  assert.equal(b.getStatic('a'), 'b', "GetStatic returned a value from its own class.");
+  assert.equal(b.getStatic('foo'), 'bar', "GetStatic returned a value from the parent class.");
+  
   
 });
 
@@ -147,7 +171,7 @@ test("Practical implementation.", function(assert){
   var Dog = (new Class).extend(Animal)
   
   .members({
-    bark: function(){alert('Woof!')}
+    bark: function(){return "Woof!";}
   })
   
   .finalize();

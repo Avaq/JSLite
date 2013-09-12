@@ -1,4 +1,4 @@
-;(function(global, undefined){
+(function(global, undefined){
   
   /**
    * Construct a JSLiteException.
@@ -11,7 +11,10 @@
   
   JSLiteException.prototype = {
     name: "JSLiteException",
-    message: "An error occurred in JSLite."
+    message: "An error occurred in JSLite.",
+    toString: function(){
+      return this.message;
+    }
   }
   
   //Export to JSLite.
