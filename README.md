@@ -1,4 +1,4 @@
-# JSLite - Version 0.4.0 Beta
+# JSLite - Version 0.5.0 Beta
 
 ## Introduction
 
@@ -14,8 +14,8 @@ However, this one is made not to get in your way. *At all*. Classes created usin
 tools are simple, pure JavaScript objects without bells and whistles. No magic 
 `init`-method, no wrapped constructors, no glitchy `super()` method.
 
-The way class-hierarchy is maintained, is through the automatically created `_STATIC`
-property on every class instance, and `_PARENT` property on every class.
+The way class-hierarchy is maintained, is through the automatically created `constructor`
+property on every class instance, and `parent` property on every class.
 
 All created classes will automatically be children of the `Class` class, which contains
 functionality for class-oriented programming, but no magic nonsense.
@@ -30,7 +30,7 @@ var Dog = (new JSLite.Class).extend(Animal)
 .construct(function(name){
   Dog.dogs.push(this);
   this.name = name;
-  Animal.call(this);
+  Animal.call(this); //Or: `this.construct()`
 })
 
 //Add static members.
@@ -63,7 +63,7 @@ myDog.bark();
 (myDog instanceof Class);
 (myDog instanceof Animal);
 (myDog instanceof Dog);
-(myDog._STATIC == Dog);
+(myDog.constructor == Dog);
 (myDog == Dog.dogs[0]);
 (myDog.name == "Scoobie");
 

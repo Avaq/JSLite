@@ -1,4 +1,4 @@
-/*jslint browser: true, forin: true, nomen: true, white: true */
+/*jslint browser: true, forin: true, plusplus: true, white: true */
 (function(global){
   
   "use strict";
@@ -36,19 +36,23 @@
   }
   
   /**
-   * Goes up the chain of inheritance to find the first class that has the static property of the given name.
+   * Iterate a chain of objects to filter them based on the presence of the `search` property key.
    *
-   * @param {String} name The name of the property to check for.
-   * @param {Class} context The class instance to start in.
+   * @param {String} search The name of the property to look for.
+   * @param {String} chain The name of the chainable property.
+   * @param {Object} object The object to start with.
    *
-   * @return {Object|false} The result, or false if not found.
+   * @return {Array} A list of objects in which the search property was found.
    */
-  function findStaticWith(name, context){
-    var clazz = context._STATIC;
-    while(clazz && !hasOwn.call(clazz, name)){
-      clazz = clazz._PARENT;
+  function chainFind(search, chain, object){
+    var results = [];
+    while(object){
+      if(hasOwn.call(object, search)){
+        results.push(object);
+      }
+      object = object[chain];
     }
-    return clazz;
+    return results;
   }
   
   /**
@@ -75,7 +79,7 @@
      */
     extend: function(parent){
       this._class.prototype = extend(Object.create(parent.prototype), this._class.prototype);
-      this._class._PARENT = parent;
+      this._class.parent = parent;
       if(!this.hasConstructor()){
         this.construct(function(){parent.apply(this, arguments);});
       }
@@ -92,7 +96,7 @@
     construct: function(constructor){
       constructor.prototype = this._class.prototype;
       extend(constructor, this._class);
-      this._class = constructor.prototype._STATIC = constructor;
+      this._class = constructor.prototype.constructor = constructor;
       return this;
     },
     
@@ -145,14 +149,14 @@
    */
   function Class(){
     var constructor = function(){};
-    this._STATIC = constructor;
-    constructor._PARENT = Class;
+    this.constructor = constructor;
+    constructor.parent = Class;
     constructor.prototype = this;
     return new ClassFactory(constructor);
   }
   
   //Class has no parent.
-  Class._PARENT = false;
+  Class.parent = false;
   
   /**
    * Defines some standard class behaviour functions.
@@ -183,12 +187,61 @@
      * Call a method on the parent class.
      *
      * @param {String} name The name of the method to call.
-     * @param {Array|Arguments} args An optional map of arguments to apply.
+     * @param {Array|Arguments} args An optional array of arguments to apply.
      *
      * @return {Object} Anything that was returned by the called method.
      */
     super: function(name, args){
-      return this._STATIC._PARENT.prototype[name].apply(this, args||[]);
+      return this.constructor.parent.prototype[name].apply(this, args||[]);
+    },
+    
+    /**
+     * Call the constructor of the parent class.
+     *
+     * @param {[Array|Arguments} args An optional array of arguments to apply.
+     *
+     * @return {void} Constructors don't return anything.
+     */
+    construct: function(args){
+      this.constructor.parent.apply(this, args||[]);
+    },
+    
+    /**
+     * Get a merge of the given property throughout the prototype chain.
+     *
+     * Walks up the prototype chain to look for a property of the given name, and merges
+     * every "state" (every occurrence of the property throughout the chain) with its
+     * previous state. When keys overlap, the value of the latest occurrence (the
+     * prototype closest to the invoking object) is used.
+     *
+     * @param {String} name The name of the property to combine.
+     *
+     * @return {Object|undefined} The combined property or undefined when none were found.
+     */
+    combine: function(name){
+      
+      //Initiate variables.
+      var result = {}
+        , i
+        , objects = chainFind(name, '__proto__', this).reverse()
+        , l = objects.length;
+      
+      // console.dir(this);
+      // console.log(name, objects);
+      
+      //No objects?
+      if(l === 0){
+        return undefined;
+      }
+      
+      //Combine objects.
+      for(i=0;i<l;i++){
+        extend(result, objects[i][name]);
+      }
+      
+      //Return the result.
+      return result;
+      
     },
     
     /**
@@ -199,8 +252,8 @@
      * @return {Object} The value of the property or undefined.
      */
     getStatic: function(name){
-      var clazz = findStaticWith(name, this);
-      return clazz ? clazz[name] : undefined;
+      var object = chainFind(name, 'parent', this.constructor)[0];
+      return object && object[name];
     },
     
     /**
@@ -214,11 +267,43 @@
      * @return {Object} The return value of the method.
      */
     callStatic: function(name, args){
-      var clazz = findStaticWith(name, this);
-      if(!clazz) throw new JSLite.JSLiteException(
+      var object = chainFind(name, 'parent', this.constructor)[0];
+      if(!object){throw new JSLite.JSLiteException(
         "None of the parent classes of '"+typeof this+"' have method '"+name+"'."
-      );
-      return clazz[name].apply(clazz, args||[]);
+      );}
+      return object[name].apply(object, args||[]);
+    },
+    
+    /**
+     * Get a merge of the given property throughout the prototype chain.
+     * 
+     * @see {this.combine}
+     *
+     * @param {String} name The name of the property to combine.
+     *
+     * @return {Object|undefined} The combined property or undefined when none were found.
+     */
+    combineStatic: function(name){
+      
+      //Initiate variables.
+      var result = {}
+        , i
+        , objects = chainFind(name, 'parent', this.constructor).reverse()
+        , l = objects.length;
+      
+      //No objects?
+      if(l === 0){
+        return undefined;
+      }
+      
+      //Combine objects.
+      for(i=0;i<l;i++){
+        extend(result, objects[i][name]);
+      }
+      
+      //Return the result.
+      return result;
+      
     }
     
   };
