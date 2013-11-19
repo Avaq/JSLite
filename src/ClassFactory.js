@@ -10,7 +10,8 @@
    * @function slice Array.prototype.slice
    */
   var hasOwn = Object.prototype.hasOwnProperty
-    , slice = Array.prototype.slice;
+    , slice = Array.prototype.slice
+    , utils = global.JSLite.utils;
   
   /**
    * Flat object extend.
@@ -22,15 +23,12 @@
    *
    * @return {object} The target after the extensions are applied.
    */
-  function extend(target){
+  utils.extend = function(target){
     var i, key, objects = slice.call(arguments, 1);
-    for(i in objects){
-      if(hasOwn.call(objects, i)){
-        for(key in objects[i]){if(hasOwn.call(objects[i], key)){
-            target[key] = objects[i][key];
-          }
-        }
-      }
+    for(i=0; i<objects.length; i++){
+      for(key in objects[i]){if(hasOwn.call(objects[i], key)){
+        target[key] = objects[i][key];
+      }}
     }
     return target;
   }
@@ -78,10 +76,12 @@
      * @chainable
      */
     extend: function(parent){
-      this._class.prototype = extend(Object.create(parent.prototype), this._class.prototype);
+      this._class.prototype = utils.extend(Object.create(parent.prototype), this._class.prototype);
       this._class.parent = parent;
       if(!this.hasConstructor()){
-        this.construct(function(){parent.apply(this, arguments);});
+        this.construct(function(){
+          parent.apply(this, arguments);
+        });
       }
       return this;
     },
@@ -90,38 +90,125 @@
      * Change the constructor of the class.
      *
      * @param {function} constructor The new constructor.
+     * @param {Boolean} clone If set to true, the given constructor is wrapped in a
+     *                        `func.apply()`-wrapper so that the original constructor
+     *                        object will remain unchanged as properties get added.
      *
      * @chainable
      */
-    construct: function(constructor){
-      constructor.prototype = this._class.prototype;
-      extend(constructor, this._class);
-      this._class = constructor.prototype.constructor = constructor;
+    construct: function(constructor, clone){
+      
+      //Wrap the given constructor?
+      var _constructor = (!clone ? constructor : function(){
+        constructor.apply(this, arguments);
+      });
+      
+      //Put the old prototype onto the new constructor.
+      _constructor.prototype = this._class.prototype;
+      
+      //Extend the new constructor with the old constructor and the given constructor.
+      utils.extend(_constructor, this._class, constructor);
+      
+      //Store the constructor on the factory and the `constructor` property of the prototype.
+      this._class = _constructor.prototype.constructor = _constructor;
+      
+      //Enable chaining.
       return this;
+      
     },
     
     /**
-     * Add members to out class.
+     * Add members to our class.
+     * 
+     * Because of the magic (and kind of reserved) nature of the `constructor` property,
+     * this method will handle it by passing it along to either `construct` if it's a
+     * function, or `statics` if it's something else. This means that:
+     * 
+     * ```js
+     * this.members({
+     *   constructor: function(){}
+     * })
+     * ```
+     * 
+     * Is the equivalent of `this.construct(function(){}, true)`, and
+     * 
+     * ```js
+     * this.members({
+     *   constructor: {foo: "bar"}
+     * })
+     * ```
+     * 
+     * The equivalent of `this.statics({foo: "bar"})`. This incidentally allows for a
+     * single object to define an entire class structure when passed to the `members`
+     * method, making it a useful feature for mixins. One might even pass
+     * `constructor.parent` to internally call `this.extend()`.
      *
      * @param {object} members The object that will be merged with the prototype.
      *
      * @chainable
      */
     members: function(members){
-      extend(this._class.prototype, members);
+      
+      //If a constructor property was given, use it appropriately.
+      if(members.constructor){
+        
+        //As an actual constructor?
+        if(members.constructor instanceof Function && members.constructor !== Object){
+          this.construct(members.constructor, true);
+        }
+        
+        //As a plain extension.
+        else{
+          this.statics(members.constructor);
+        }
+        
+        //Get rid of it as a member.
+        delete members.constructor;
+        
+      }
+      
+      //Add the given members.
+      utils.extend(this._class.prototype, members);
+      
+      //Enable chaining.
       return this;
+      
     },
     
     /**
      * Add static members to out class.
+     * 
+     * Because of the magic (and kind of reserved) nature of the `parent` property, this
+     * method will handle it by passing it along to `extend`. This means that:
+     * 
+     * ```js
+     * this.statics({
+     *   parent: Array
+     * })
+     * ```
+     * 
+     * Is the equivalent of `this.extend(Array)`. This is a powerful feature for mixins,
+     * especially when combined with the fact that an object passed to `this.members()`
+     * can also accept statics.
      *
      * @param {object} members The object that will be merged with the class.
      *
      * @chainable
      */
     statics: function(members){
-      extend(this._class, members);
+      
+      //Set a parent class?
+      if(members.parent){
+        this.extend(members.parent);
+        delete members.parent;
+      }
+      
+      //Add static members.
+      utils.extend(this._class, members);
+      
+      //Enable chaining.
       return this;
+      
     },
     
     /**
@@ -226,9 +313,6 @@
         , objects = chainFind(name, '__proto__', this).reverse()
         , l = objects.length;
       
-      // console.dir(this);
-      // console.log(name, objects);
-      
       //No objects?
       if(l === 0){
         return undefined;
@@ -236,7 +320,7 @@
       
       //Combine objects.
       for(i=0;i<l;i++){
-        extend(result, objects[i][name]);
+        utils.extend(result, objects[i][name]);
       }
       
       //Return the result.
@@ -298,7 +382,7 @@
       
       //Combine objects.
       for(i=0;i<l;i++){
-        extend(result, objects[i][name]);
+        utils.extend(result, objects[i][name]);
       }
       
       //Return the result.

@@ -1,4 +1,4 @@
-# JSLite - Version 0.5.0 Beta
+# JSLite - Version 0.6.0 Beta
 
 ## Introduction
 
@@ -12,10 +12,10 @@ relating to object oriented programming easier to write and read.
 Yes, this is another JavaScript library that offers functionality for creating classes.
 However, this one is made not to get in your way. *At all*. Classes created using these
 tools are simple, pure JavaScript objects without bells and whistles. No magic 
-`init`-method, no wrapped constructors, no glitchy `super()` method.
+`init`-method, little wrapped constructors, no glitchy `super()` method.
 
-The way class-hierarchy is maintained, is through the automatically created `constructor`
-property on every class instance, and `parent` property on every class.
+The way class-hierarchy is maintained, is through the automatically maintained
+`constructor` property on every class instance, and `parent` property on every class.
 
 All created classes will automatically be children of the `Class` class, which contains
 functionality for class-oriented programming, but no magic nonsense.

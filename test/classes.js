@@ -2,9 +2,20 @@
  * Unit tests for /src/Class.js
  */
 
+var utils = JSLite.utils;
 var Class = JSLite.Class;
 var ClassFactory = JSLite.ClassFactory;
 var JSLiteException = JSLite.JSLiteException;
+
+test("Utilities", function(assert){
+  
+  var obj = {a: 1};
+  
+  utils.extend(obj, {b: 2}, {c: 3, d: 4});
+  
+  assert.deepEqual(obj, {a: 1, b: 2, c: 3, d: 4}, "All objects were merged.");
+  
+});
 
 test("Class factory", function(assert){
   
@@ -46,6 +57,13 @@ test("Class inheritance", function(assert){
   
   assert.equal(myConstructorInstance.foo, "bar", "Sub-classes use their parent constructor by default.");
   
+  var MyOtherSubConstructorClass = (new Class).extend(MyConstructorClass)
+    .construct(function(){this.foo = "baz";}).finalize();
+  
+  myConstructorInstance = new MyOtherSubConstructorClass;
+  
+  assert.equal(myConstructorInstance.foo, "baz", "Constructors can be overridden.");
+  
 });
 
 test("Constructors", function(assert){
@@ -62,6 +80,10 @@ test("Constructors", function(assert){
   MyClass = (new ClassFactory(MyClass)).construct(myConstructor).finalize();
   
   assert.equal(myConstructor, MyClass, "Setting a new constructor turns the class into it.");
+  
+  var mc = new MyClass("Avaq");
+  
+  assert.equal(mc.name, "Avaq", "The constructor set a property on the instance.");
   
 });
 
@@ -112,7 +134,7 @@ test("Static members", function(assert){
   
 });
 
-test("Practical implementation.", function(assert){
+test("Practical implementation", function(assert){
   
   var Animal = (new Class)
   

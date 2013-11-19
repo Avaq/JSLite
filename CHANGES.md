@@ -1,3 +1,10 @@
+#### [Version 0.6.0 Beta](https://github.com/Avaq/JSLite/tree/0.6.0-beta)
+_19-Nov-2013_
+
+* Exposed utility functions.
+* Built in powerful support for mixins in the ClassFactory.
+* Created a rich class-instance-level event mixin.
+
 #### [Version 0.5.0 Beta](https://github.com/Avaq/JSLite/tree/0.5.0-beta)
 _14-Nov-2013_
 

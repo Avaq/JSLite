@@ -20,5 +20,6 @@
   //Export to JSLite.
   global.JSLite = {};
   global.JSLite.JSLiteException = JSLiteException;
+  global.JSLite.utils = {};
   
 })(this||window);
