@@ -142,12 +142,12 @@
       for(i=parts.length; i>0; i--){
         
         key = parts.slice(0,i).join(':');
-        listeners = this.eventListeners[key];
         
-        if(!listeners){
+        if(!hasOwn.call(this.eventListeners, key)){
           continue;
         }
         
+        listeners = this.eventListeners[key];
         e.currentType = key;
         e.typeStack = parts.slice(i);
         
@@ -196,13 +196,11 @@
       
       this._initEvents();
       
-      var i, listeners = this.eventListeners[eventName];
-      
-      if(!listeners){
+      if(!hasOwn.call(this.eventListeners, eventName)){
         return false;
       }
       
-      console.log(listeners)
+      var i, listeners = this.eventListeners[eventName];
       
       for(i=0; i<listeners.length; i++){
         if(listeners[i].callback === callback){
@@ -221,12 +219,15 @@
     
     removeListeners: function(eventName){
       this._initEvents();
+      if(!hasOwn.call(this.eventListeners, eventName)){
+        return;
+      }
       delete this.eventListeners[eventName];
     },
     
     _initEvents: function(){
-      if(!(this.eventListeners instanceof Array)){
-        this.eventListeners = [];
+      if(!this.eventListeners){
+        this.eventListeners = {};
       }
     }
     
