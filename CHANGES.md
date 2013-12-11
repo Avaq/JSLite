@@ -1,3 +1,8 @@
+#### [Version 0.6.2 Beta](https://github.com/Avaq/JSLite/tree/0.6.2-beta)
+_11-Dec-2013_
+
+* Some changes. Don't look into them. Just update. Nothing to see here.
+
 #### [Version 0.6.1 Beta](https://github.com/Avaq/JSLite/tree/0.6.1-beta)
 _20-Nov-2013_
 

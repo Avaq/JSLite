@@ -37,7 +37,6 @@
     //Set given and default properties.
     utils.extend(this, properties, {
       type: eventName,
-      asd: eventName,
       currentType: eventName,
       timeStamp: (new Date()).getTime()
     });
